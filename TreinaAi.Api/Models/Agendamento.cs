@@ -7,13 +7,13 @@ namespace TreinaAi.Api.Models;
     }
 
 public class Agendamento {
-    public int IdAgendamento { get; set; }
+   public int Id { get; set; }
 
-    public DateOnly dataAgendamento { get; set; } 
+    public DateOnly Data { get; set; } 
 
     public StatusAgendamento Status { get; set; } = StatusAgendamento.Confirmado;
 
-    public DateTime AgendamentoCriadoEm { get; set; } = DateTime.UtcNow;
+    public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
 
     public int HorarioTemplateId { get; set; }
 
