@@ -1,6 +1,11 @@
 # TreinaAi
 
+# TreinaAi
+
+> Projeto em construção — funcionalidades ainda sendo desenvolvidas.
+
 Sistema de agendamento de horários de treino para uma academia/personal local.
+
 
 ## Sobre o projeto
 
