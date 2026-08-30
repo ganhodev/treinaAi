@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer; 
-using Microsoft.AspNetCore.Identity; 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text; 
+using System.Text;
 using TreinaAi.Api.Data;
-using TreinaAi.Api.Models; 
+using TreinaAi.Api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
