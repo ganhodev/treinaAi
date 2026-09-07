@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TreinaAi.Api.Data;
@@ -11,10 +13,12 @@ namespace TreinaAi.Api.Controllers;
 public class HorarioTemplateController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly UserManager<Usuario> _userManager;
 
-    public HorarioTemplateController(AppDbContext context)
+    public HorarioTemplateController(AppDbContext context, UserManager<Usuario> userManager)
     {
         _context = context;
+        _userManager = userManager;
     }
 
     [HttpGet]
@@ -47,9 +51,17 @@ public class HorarioTemplateController : ControllerBase
         return Ok(resultado);
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Criar(CriarHorarioDto dto)
     {
+        var usuarioLogado = await _userManager.GetUserAsync(User);
+
+        if (usuarioLogado == null || !usuarioLogado.EhProfessor)
+        {
+            return Forbid();
+        }
+
         var horario = new HorarioTemplate
         {
             DiaSemana = dto.DiaSemana,
@@ -62,6 +74,14 @@ public class HorarioTemplateController : ControllerBase
         _context.HorariosTemplate.Add(horario);
         await _context.SaveChangesAsync();
 
-        return Ok(horario);
+        return Ok(new
+    {
+        horario.Id,
+        horario.DiaSemana,
+        horario.HoraInicio,
+        horario.HoraFim,
+        horario.CapacidadeMaxima,
+        horario.ProfessorId
+    });
     }
 }
