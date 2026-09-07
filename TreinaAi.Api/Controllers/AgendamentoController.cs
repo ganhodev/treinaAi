@@ -76,4 +76,39 @@ public class AgendamentoController : ControllerBase
 
         return Ok(agendamento);
     }
+
+    [HttpGet("professor")]
+public async Task<IActionResult> ListarPorProfessor()
+{
+    var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (usuarioId == null)
+    {
+        return Unauthorized();
+    }
+
+    var usuarioLogado = await _context.Users.FindAsync(usuarioId);
+
+    if (usuarioLogado == null || !usuarioLogado.EhProfessor)
+    {
+        return Forbid();
+    }
+
+    var agendamentos = await _context.Agendamentos
+        .Include(a => a.Usuario)
+        .Include(a => a.HorarioTemplate)
+        .Where(a => a.HorarioTemplate!.ProfessorId == usuarioId)
+        .Select(a => new AgendamentoProfessorDto
+        {
+            Id = a.Id,
+            AlunoNome = a.Usuario!.Nome,
+            Data = a.Data,
+            HoraInicio = a.HorarioTemplate!.HoraInicio.ToString("HH:mm"),
+            HoraFim = a.HorarioTemplate!.HoraFim.ToString("HH:mm"),
+            Status = a.Status.ToString()
+        })
+        .ToListAsync();
+
+    return Ok(agendamentos);
+}
 }
