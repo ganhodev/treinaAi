@@ -70,16 +70,6 @@ public async Task<IActionResult> Login(LoginDto dto)
     });
 }
 
-[HttpGet("usuarios")]
-public IActionResult ListarUsuarios()
-{
-    var usuarios = _userManager.Users
-        .Select(u => new { u.Id, u.Nome, u.Email, u.EhProfessor })
-        .ToList();
-
-    return Ok(usuarios);
-}
-
 private string GerarToken(Usuario usuario)
 {
     var claims = new List<Claim>
