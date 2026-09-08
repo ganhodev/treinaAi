@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>TreinaAi</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>TreinaAi</h1>
+
+        <div id="form-login">
+            <h2>Login</h2>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-senha" placeholder="Senha">
+            <button onclick="fazerLogin()">Entrar</button>
+            <p>Não tem conta? <a href="#" onclick="mostrarCadastro()">Cadastre-se</a></p>
+        </div>
+
+        <div id="form-cadastro" style="display: none;">
+            <h2>Cadastro</h2>
+            <input type="text" id="cadastro-nome" placeholder="Nome">
+            <input type="email" id="cadastro-email" placeholder="Email">
+            <input type="password" id="cadastro-senha" placeholder="Senha">
+            
+            <button onclick="fazerCadastro()">Cadastrar</button>
+            <p>Já tem conta? <a href="#" onclick="mostrarLogin()">Fazer login</a></p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

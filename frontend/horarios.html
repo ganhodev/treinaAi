@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>TreinaAi - Horários</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .container-horarios {
+            width: 600px;
+        }
+        .horario-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .horario-info strong {
+            display: block;
+            text-transform: capitalize;
+        }
+        .topo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-sair {
+            background: none;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+            width: auto;
+            padding: 6px 12px;
+        }
+        .btn-inscrever {
+            width: auto;
+            padding: 8px 16px;
+        }
+        .sem-vaga {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container container-horarios">
+        <div class="topo">
+            <h1>TreinaAi</h1>
+            <button class="btn-sair" onclick="sair()">Sair</button>
+        </div>
+
+        <p>Olá, <strong id="nome-usuario"></strong>!</p>
+
+        <div id="link-professor" style="display: none;">
+            <p><a href="professor.html">Ver alunos inscritos nos meus horários</a></p>
+        </div>
+
+        <h2>Horários disponíveis</h2>
+        <div id="lista-horarios">
+            <p>Carregando...</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        carregarHorarios();
+    </script>
+</body>
+</html>
