@@ -1,7 +1,5 @@
 # TreinaAi
 
-> Projeto em construção — funcionalidades ainda sendo desenvolvidas.
-
 Sistema de agendamento de horários de treino para uma academia/personal local.
 
 ## Sobre o projeto
@@ -12,14 +10,42 @@ Este é um projeto pessoal de estudo e portfólio, sem fins comerciais — o obj
 
 ## Funcionalidades
 
-- Cadastro e login de usuários (alunos e professores)
-- Visualização dos horários disponíveis por professor, com limite de vagas
+- Cadastro e login de usuários com autenticação JWT
+- Visualização dos horários disponíveis por professor, com controle de vagas
 - Inscrição e cancelamento em horários de treino
-- Painel para professores visualizarem os alunos inscritos em seus horários
+- Painel para professores visualizarem os alunos inscritos em seus horários (incluindo histórico de cancelamentos)
+- Restrição de permissões: apenas professores podem criar horários
+
+## Telas
+
+**Login**
+
+![Tela de login](screenshots/tela-login.png)
+
+**Cadastro**
+
+![Tela de cadastro](screenshots/tela-cadastro.png)
+
+**Horários disponíveis**
+
+![Tela de horários](screenshots/tela-horarios.png)
+
+**Painel do professor**
+
+![Painel do professor](screenshots/tela-professor.png)
 
 ## Tecnologias
 
+**Backend**
 - C# / .NET Core
 - Entity Framework Core
 - PostgreSQL
 - ASP.NET Core Identity + JWT (autenticação)
+- Swagger (documentação e testes da API)
+
+**Frontend**
+- HTML, CSS e JavaScript puro (sem framework)
+
+## Status
+
+Projeto em desenvolvimento ativo. Próximos passos: validações de data no agendamento, tela de "meus agendamentos" para o aluno, e deploy.
