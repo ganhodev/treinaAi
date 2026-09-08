@@ -25,13 +25,13 @@ public class AuthController : ControllerBase
    [HttpPost("registrar")]
 public async Task<IActionResult> Registrar(CadastroDto dto)
 {
-    var usuario = new Usuario
-    {
-        UserName = dto.Email,
-        Email = dto.Email,
-        Nome = dto.Nome,
-        EhProfessor = dto.EhProfessor
-    };
+  var usuario = new Usuario
+{
+    UserName = dto.Email,
+    Email = dto.Email,
+    Nome = dto.Nome,
+    EhProfessor = false
+};
 
     var resultado = await _userManager.CreateAsync(usuario, dto.Senha);
 

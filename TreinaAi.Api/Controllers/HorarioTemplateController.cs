@@ -84,4 +84,28 @@ public class HorarioTemplateController : ControllerBase
         horario.ProfessorId
     });
     }
+
+    [Authorize]
+    [HttpDelete("{id}")]
+public async Task<IActionResult> Deletar(int id)
+{
+    var usuarioLogado = await _userManager.GetUserAsync(User);
+
+    if (usuarioLogado == null || !usuarioLogado.EhProfessor)
+    {
+        return Forbid();
+    }
+
+    var horario = await _context.HorariosTemplate.FindAsync(id);
+
+    if (horario == null)
+    {
+        return NotFound("Horário não encontrado.");
+    }
+
+    _context.HorariosTemplate.Remove(horario);
+    await _context.SaveChangesAsync();
+
+    return NoContent();
+}
 }
