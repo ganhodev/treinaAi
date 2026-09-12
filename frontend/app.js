@@ -110,7 +110,7 @@ async function carregarHorarios() {
                 </div>
                 <button class="btn-inscrever ${semVaga ? 'sem-vaga' : ''}"
                         ${semVaga ? 'disabled' : ''}
-                        onclick="inscrever(${h.id})">
+                        onclick="inscrever(${h.id}, '${h.diaSemana}')">
                     ${semVaga ? 'Sem vaga' : 'Inscrever-se'}
                 </button>
             `;
@@ -122,12 +122,68 @@ async function carregarHorarios() {
     }
 }
 
-async function inscrever(horarioTemplateId) {
+const diasSemanaJs = {
+    "segunda": 1,
+    "terca": 2,
+    "quarta": 3,
+    "quinta": 4,
+    "sexta": 5
+};
+
+let horarioSelecionado = null;
+let diaSemanaSelecionado = null;
+
+function proximasDatas(diaSemana) {
+    const diaAlvo = diasSemanaJs[diaSemana];
+    const datas = [];
+    const hoje = new Date();
+    const limite = new Date(hoje.getFullYear(), 11, 31);
+
+    let data = new Date(hoje);
+    while (data <= limite) {
+        data.setDate(data.getDate() + 1);
+        if (data.getDay() === diaAlvo && data <= limite) {
+            const ano = data.getFullYear();
+            const mes = String(data.getMonth() + 1).padStart(2, "0");
+            const dia = String(data.getDate()).padStart(2, "0");
+            datas.push(`${ano}-${mes}-${dia}`);
+        }
+    }
+    return datas;
+}
+
+function inscrever(horarioTemplateId, diaSemana) {
+    horarioSelecionado = horarioTemplateId;
+    diaSemanaSelecionado = diaSemana;
+
+    const hoje = new Date();
+    const limite = new Date(hoje.getFullYear(), 11, 31);
+
+    const input = document.getElementById("input-data");
+    input.min = hoje.toISOString().split("T")[0];
+    input.max = limite.toISOString().split("T")[0];
+    input.value = proximasDatas(diaSemana)[0];
+
+    document.getElementById("modal-agendar").style.display = "flex";
+}
+
+function fecharModal() {
+    document.getElementById("modal-agendar").style.display = "none";
+    horarioSelecionado = null;
+    diaSemanaSelecionado = null;
+}
+
+async function confirmarAgendamento() {
     const token = verificarLogin();
     if (!token) return;
 
-    const dataInput = prompt("Digite a data do treino (AAAA-MM-DD):");
-    if (!dataInput) return;
+    const data = document.getElementById("input-data").value;
+
+    const dataEscolhida = new Date(data + "T00:00:00");
+    if (dataEscolhida.getDay() !== diasSemanaJs[diaSemanaSelecionado]) {
+        alert(`Escolha uma data que caia em uma ${diaSemanaSelecionado}-feira.`);
+        return;
+    }
 
     try {
         const resposta = await fetch(`${API_URL}/Agendamento`, {
@@ -136,7 +192,7 @@ async function inscrever(horarioTemplateId) {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             },
-            body: JSON.stringify({ horarioTemplateId, data: dataInput })
+            body: JSON.stringify({ horarioTemplateId: horarioSelecionado, data })
         });
 
         if (!resposta.ok) {
@@ -146,6 +202,7 @@ async function inscrever(horarioTemplateId) {
         }
 
         alert("Inscrito com sucesso!");
+        fecharModal();
         carregarHorarios();
     } catch (erro) {
         alert("Erro ao conectar com o servidor.");

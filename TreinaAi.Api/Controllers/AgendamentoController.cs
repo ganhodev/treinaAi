@@ -37,6 +37,25 @@ public class AgendamentoController : ControllerBase
             return NotFound("Horário não encontrado.");
         }
 
+        var diasSemanaMap = new Dictionary<DiaSemana, DayOfWeek>
+        {
+            { DiaSemana.segunda, DayOfWeek.Monday },
+            { DiaSemana.terca, DayOfWeek.Tuesday },
+            { DiaSemana.quarta, DayOfWeek.Wednesday },
+            { DiaSemana.quinta, DayOfWeek.Thursday },
+            { DiaSemana.sexta, DayOfWeek.Friday }
+        };
+
+        if (dto.Data < DateOnly.FromDateTime(DateTime.Today))
+        {
+            return BadRequest("Não é possível agendar em uma data passada.");
+        }
+
+        if (dto.Data.DayOfWeek != diasSemanaMap[horario.DiaSemana])
+        {
+            return BadRequest($"A data informada não corresponde a uma {horario.DiaSemana}-feira.");
+        }
+
         var vagasOcupadas = await _context.Agendamentos
             .CountAsync(a => a.HorarioTemplateId == dto.HorarioTemplateId
                 && a.Data == dto.Data
@@ -78,37 +97,37 @@ public class AgendamentoController : ControllerBase
     }
 
     [HttpGet("professor")]
-public async Task<IActionResult> ListarPorProfessor()
-{
-    var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-    if (usuarioId == null)
+    public async Task<IActionResult> ListarPorProfessor()
     {
-        return Unauthorized();
-    }
+        var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-    var usuarioLogado = await _context.Users.FindAsync(usuarioId);
-
-    if (usuarioLogado == null || !usuarioLogado.EhProfessor)
-    {
-        return Forbid();
-    }
-
-    var agendamentos = await _context.Agendamentos
-        .Include(a => a.Usuario)
-        .Include(a => a.HorarioTemplate)
-        .Where(a => a.HorarioTemplate!.ProfessorId == usuarioId)
-        .Select(a => new AgendamentoProfessorDto
+        if (usuarioId == null)
         {
-            Id = a.Id,
-            AlunoNome = a.Usuario!.Nome,
-            Data = a.Data,
-            HoraInicio = a.HorarioTemplate!.HoraInicio.ToString("HH:mm"),
-            HoraFim = a.HorarioTemplate!.HoraFim.ToString("HH:mm"),
-            Status = a.Status.ToString()
-        })
-        .ToListAsync();
+            return Unauthorized();
+        }
 
-    return Ok(agendamentos);
-}
+        var usuarioLogado = await _context.Users.FindAsync(usuarioId);
+
+        if (usuarioLogado == null || !usuarioLogado.EhProfessor)
+        {
+            return Forbid();
+        }
+
+        var agendamentos = await _context.Agendamentos
+            .Include(a => a.Usuario)
+            .Include(a => a.HorarioTemplate)
+            .Where(a => a.HorarioTemplate!.ProfessorId == usuarioId)
+            .Select(a => new AgendamentoProfessorDto
+            {
+                Id = a.Id,
+                AlunoNome = a.Usuario!.Nome,
+                Data = a.Data,
+                HoraInicio = a.HorarioTemplate!.HoraInicio.ToString("HH:mm"),
+                HoraFim = a.HorarioTemplate!.HoraFim.ToString("HH:mm"),
+                Status = a.Status.ToString()
+            })
+            .ToListAsync();
+
+        return Ok(agendamentos);
+    }
 }
