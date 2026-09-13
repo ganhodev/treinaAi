@@ -131,7 +131,7 @@ async function carregarHorarios() {
             card.innerHTML = `
                 <div class="horario-info">
                     <strong>${h.diaSemana}</strong>
-                    ${h.horaInicio} - ${h.horaFim} · Prof. ${h.professorNome}
+                    ${h.horaInicio} - ${h.horaFim} · ${h.professorNome}
                     <br>Vagas: ${h.vagasDisponiveis}/${h.capacidadeMaxima}
                 </div>
                 <button class="btn-inscrever ${semVaga ? 'sem-vaga' : ''}"
