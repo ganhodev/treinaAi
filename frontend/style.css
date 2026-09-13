@@ -103,3 +103,19 @@ label input {
     color: #666;
     border: 1px solid #ccc;
 }
+
+.agendamento-card {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-cancelar-agendamento {
+    width: auto;
+    padding: 6px 12px;
+    background-color: #e74c3c;
+}

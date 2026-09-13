@@ -10,6 +10,11 @@ function mostrarLogin() {
     document.getElementById("form-login").style.display = "block";
 }
 
+function formatarData(dataIso) {
+    const [ano, mes, dia] = dataIso.split("-");
+    return `${dia}/${mes}/${ano}`;
+}
+
 async function fazerLogin() {
     const email = document.getElementById("login-email").value;
     const senha = document.getElementById("login-senha").value;
@@ -204,6 +209,75 @@ async function confirmarAgendamento() {
         alert("Inscrito com sucesso!");
         fecharModal();
         carregarHorarios();
+        carregarMeusAgendamentos();
+    } catch (erro) {
+        alert("Erro ao conectar com o servidor.");
+        console.error(erro);
+    }
+}
+
+async function carregarMeusAgendamentos() {
+    const token = verificarLogin();
+    if (!token) return;
+
+    try {
+        const resposta = await fetch(`${API_URL}/Agendamento/meus`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!resposta.ok) {
+            document.getElementById("lista-meus-agendamentos").innerHTML = "<p>Erro ao carregar.</p>";
+            return;
+        }
+
+        const agendamentos = await resposta.json();
+        const container = document.getElementById("lista-meus-agendamentos");
+
+        if (agendamentos.length === 0) {
+            container.innerHTML = "<p>Você ainda não tem agendamentos.</p>";
+            return;
+        }
+
+        container.innerHTML = "";
+        agendamentos.forEach(a => {
+            const card = document.createElement("div");
+            card.className = "agendamento-card";
+            card.innerHTML = `
+                <div>
+                    <strong>${a.diaSemana}</strong> · ${formatarData(a.data)} · ${a.horaInicio} - ${a.horaFim}
+                </div>
+                <button class="btn-cancelar-agendamento" onclick="cancelarAgendamento(${a.id})">
+                    Cancelar
+                </button>
+            `;
+            container.appendChild(card);
+        });
+    } catch (erro) {
+        console.error(erro);
+        document.getElementById("lista-meus-agendamentos").innerHTML = "<p>Erro ao conectar.</p>";
+    }
+}
+
+async function cancelarAgendamento(id) {
+    const token = verificarLogin();
+    if (!token) return;
+
+    if (!confirm("Tem certeza que deseja cancelar este agendamento?")) return;
+
+    try {
+        const resposta = await fetch(`${API_URL}/Agendamento/${id}/cancelar`, {
+            method: "PUT",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!resposta.ok) {
+            alert("Erro ao cancelar.");
+            return;
+        }
+
+        alert("Agendamento cancelado.");
+        carregarHorarios();
+        carregarMeusAgendamentos();
     } catch (erro) {
         alert("Erro ao conectar com o servidor.");
         console.error(erro);
@@ -246,7 +320,7 @@ async function carregarAgendamentosProfessor() {
             card.className = "agendamento-card";
             card.innerHTML = `
                 <strong>${a.alunoNome}</strong><br>
-                Data: ${a.data} · ${a.horaInicio} - ${a.horaFim}<br>
+                Data: ${formatarData(a.data)} · ${a.horaInicio} - ${a.horaFim}<br>
                 Status: <span class="${statusClass}">${a.status}</span>
             `;
             container.appendChild(card);
