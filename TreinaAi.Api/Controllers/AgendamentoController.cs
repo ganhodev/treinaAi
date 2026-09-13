@@ -56,6 +56,17 @@ public class AgendamentoController : ControllerBase
             return BadRequest($"A data informada não corresponde a uma {horario.DiaSemana}-feira.");
         }
 
+        var jaInscrito = await _context.Agendamentos
+            .AnyAsync(a => a.HorarioTemplateId == dto.HorarioTemplateId
+                && a.Data == dto.Data
+                && a.UsuarioId == usuarioId
+                && a.Status == StatusAgendamento.Confirmado);
+
+        if (jaInscrito)
+        {
+            return BadRequest("Você já está inscrito neste horário nesta data.");
+        }
+
         var vagasOcupadas = await _context.Agendamentos
             .CountAsync(a => a.HorarioTemplateId == dto.HorarioTemplateId
                 && a.Data == dto.Data
