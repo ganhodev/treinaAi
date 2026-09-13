@@ -141,4 +141,33 @@ public class AgendamentoController : ControllerBase
 
         return Ok(agendamentos);
     }
+
+[HttpGet("meus")]
+public async Task<IActionResult> ListarMeusAgendamentos()
+{
+    var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (usuarioId == null)
+    {
+        return Unauthorized();
+    }
+
+    var agendamentos = await _context.Agendamentos
+        .Include(a => a.HorarioTemplate)
+        .Where(a => a.UsuarioId == usuarioId && a.Status == StatusAgendamento.Confirmado)
+        .OrderBy(a => a.Data)
+        .Select(a => new MeuAgendamentoDto
+        {
+            Id = a.Id,
+            DiaSemana = a.HorarioTemplate!.DiaSemana.ToString(),
+            Data = a.Data,
+            HoraInicio = a.HorarioTemplate!.HoraInicio.ToString("HH:mm"),
+            HoraFim = a.HorarioTemplate!.HoraFim.ToString("HH:mm"),
+            Status = a.Status.ToString()
+        })
+        .ToListAsync();
+
+    return Ok(agendamentos);
 }
+}
+
