@@ -84,6 +84,27 @@ function sair() {
     window.location.href = "index.html";
 }
 
+async function fetchComAuth(url, opcoes = {}) {
+    const token = verificarLogin();
+    if (!token) return null;
+
+    opcoes.headers = {
+        ...opcoes.headers,
+        "Authorization": `Bearer ${token}`
+    };
+
+    const resposta = await fetch(url, opcoes);
+
+    if (resposta.status === 401) {
+        localStorage.clear();
+        alert("Sua sessão expirou. Faça login novamente.");
+        window.location.href = "index.html";
+        return null;
+    }
+
+    return resposta;
+}
+
 async function carregarHorarios() {
     const token = verificarLogin();
     if (!token) return;
@@ -179,9 +200,6 @@ function fecharModal() {
 }
 
 async function confirmarAgendamento() {
-    const token = verificarLogin();
-    if (!token) return;
-
     const data = document.getElementById("input-data").value;
 
     const dataEscolhida = new Date(data + "T00:00:00");
@@ -191,14 +209,13 @@ async function confirmarAgendamento() {
     }
 
     try {
-        const resposta = await fetch(`${API_URL}/Agendamento`, {
+        const resposta = await fetchComAuth(`${API_URL}/Agendamento`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ horarioTemplateId: horarioSelecionado, data })
         });
+
+        if (!resposta) return;
 
         if (!resposta.ok) {
             const erro = await resposta.text();
@@ -217,13 +234,9 @@ async function confirmarAgendamento() {
 }
 
 async function carregarMeusAgendamentos() {
-    const token = verificarLogin();
-    if (!token) return;
-
     try {
-        const resposta = await fetch(`${API_URL}/Agendamento/meus`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
+        const resposta = await fetchComAuth(`${API_URL}/Agendamento/meus`);
+        if (!resposta) return;
 
         if (!resposta.ok) {
             document.getElementById("lista-meus-agendamentos").innerHTML = "<p>Erro ao carregar.</p>";
@@ -259,16 +272,14 @@ async function carregarMeusAgendamentos() {
 }
 
 async function cancelarAgendamento(id) {
-    const token = verificarLogin();
-    if (!token) return;
-
     if (!confirm("Tem certeza que deseja cancelar este agendamento?")) return;
 
     try {
-        const resposta = await fetch(`${API_URL}/Agendamento/${id}/cancelar`, {
-            method: "PUT",
-            headers: { "Authorization": `Bearer ${token}` }
+        const resposta = await fetchComAuth(`${API_URL}/Agendamento/${id}/cancelar`, {
+            method: "PUT"
         });
+
+        if (!resposta) return;
 
         if (!resposta.ok) {
             alert("Erro ao cancelar.");
@@ -285,9 +296,6 @@ async function cancelarAgendamento(id) {
 }
 
 async function carregarAgendamentosProfessor() {
-    const token = verificarLogin();
-    if (!token) return;
-
     const ehProfessor = localStorage.getItem("ehProfessor") === "true";
     if (!ehProfessor) {
         alert("Acesso restrito a professores.");
@@ -296,9 +304,8 @@ async function carregarAgendamentosProfessor() {
     }
 
     try {
-        const resposta = await fetch(`${API_URL}/Agendamento/professor`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
+        const resposta = await fetchComAuth(`${API_URL}/Agendamento/professor`);
+        if (!resposta) return;
 
         if (!resposta.ok) {
             document.getElementById("lista-agendamentos").innerHTML = "<p>Erro ao carregar dados.</p>";
