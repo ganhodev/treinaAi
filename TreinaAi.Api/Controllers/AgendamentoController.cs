@@ -94,7 +94,18 @@ public class AgendamentoController : ControllerBase
     [HttpPut("{id}/cancelar")]
     public async Task<IActionResult> Cancelar(int id)
     {
-        var agendamento = await _context.Agendamentos.FindAsync(id);
+        var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (usuarioId == null)
+        {
+            return Unauthorized();
+        }
+
+        var agendamento = await _context.Agendamentos
+            .Include(a => a.HorarioTemplate)
+            .FirstOrDefaultAsync(a => a.Id == id
+                && (a.UsuarioId == usuarioId
+                    || a.HorarioTemplate!.ProfessorId == usuarioId));
 
         if (agendamento == null)
         {
@@ -170,4 +181,3 @@ public async Task<IActionResult> ListarMeusAgendamentos()
     return Ok(agendamentos);
 }
 }
-
