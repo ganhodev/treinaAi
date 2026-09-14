@@ -62,6 +62,16 @@ public class HorarioTemplateController : ControllerBase
             return Forbid();
         }
 
+        if (dto.CapacidadeMaxima <= 0)
+        {
+            return BadRequest("A capacidade máxima deve ser maior que zero.");
+        }
+
+        if (dto.HoraFim <= dto.HoraInicio)
+        {
+            return BadRequest("O horário final deve ser posterior ao horário inicial.");
+        }
+
         var horario = new HorarioTemplate
         {
             DiaSemana = dto.DiaSemana,
