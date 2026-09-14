@@ -67,6 +67,11 @@ public class HorarioTemplateController : ControllerBase
             return BadRequest("A capacidade máxima deve ser maior que zero.");
         }
 
+        if (!Enum.IsDefined(dto.DiaSemana))
+        {
+            return BadRequest("O dia da semana informado é inválido.");
+        }
+
         if (dto.HoraFim <= dto.HoraInicio)
         {
             return BadRequest("O horário final deve ser posterior ao horário inicial.");
