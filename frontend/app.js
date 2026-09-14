@@ -37,7 +37,7 @@ async function fazerLogin() {
         localStorage.setItem("nome", dados.nome);
         localStorage.setItem("ehProfessor", dados.ehProfessor);
 
-        window.location.href = "horarios.html";
+        mostrarTelaHorarios();
     } catch (erro) {
         alert("Erro ao conectar com o servidor.");
         console.error(erro);
@@ -73,7 +73,9 @@ async function fazerCadastro() {
 function verificarLogin() {
     const token = localStorage.getItem("token");
     if (!token) {
-        window.location.href = "index.html";
+        if (!document.getElementById("tela-autenticacao")) {
+            window.location.href = "index.html";
+        }
         return null;
     }
     return token;
@@ -81,7 +83,39 @@ function verificarLogin() {
 
 function sair() {
     localStorage.clear();
-    window.location.href = "index.html";
+    mostrarTela("tela-autenticacao");
+    mostrarLogin();
+}
+
+function mostrarTela(id) {
+    document.querySelectorAll("main > section").forEach(tela => {
+        tela.style.display = tela.id === id ? "block" : "none";
+    });
+}
+
+function mostrarTelaHorarios() {
+    mostrarTela("tela-horarios");
+    carregarHorarios();
+    carregarMeusAgendamentos();
+}
+
+function mostrarTelaProfessor() {
+    if (localStorage.getItem("ehProfessor") !== "true") {
+        alert("Acesso restrito a professores.");
+        return;
+    }
+
+    mostrarTela("tela-professor");
+    carregarAgendamentosProfessor();
+}
+
+function inicializarAplicacao() {
+    if (!verificarLogin()) {
+        mostrarTela("tela-autenticacao");
+        return;
+    }
+
+    mostrarTelaHorarios();
 }
 
 async function fetchComAuth(url, opcoes = {}) {
@@ -299,7 +333,7 @@ async function carregarAgendamentosProfessor() {
     const ehProfessor = localStorage.getItem("ehProfessor") === "true";
     if (!ehProfessor) {
         alert("Acesso restrito a professores.");
-        window.location.href = "horarios.html";
+        mostrarTelaHorarios();
         return;
     }
 
