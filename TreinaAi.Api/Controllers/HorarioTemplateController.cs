@@ -68,7 +68,7 @@ public class HorarioTemplateController : ControllerBase
             HoraInicio = dto.HoraInicio,
             HoraFim = dto.HoraFim,
             CapacidadeMaxima = dto.CapacidadeMaxima,
-            ProfessorId = dto.ProfessorId
+            ProfessorId = usuarioLogado.Id
         };
 
         _context.HorariosTemplate.Add(horario);
