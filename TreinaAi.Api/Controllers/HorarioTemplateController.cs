@@ -104,6 +104,14 @@ public async Task<IActionResult> Deletar(int id)
         return NotFound("Horário não encontrado.");
     }
 
+    var possuiAgendamentos = await _context.Agendamentos
+        .AnyAsync(a => a.HorarioTemplateId == id);
+
+    if (possuiAgendamentos)
+    {
+        return Conflict("Não é possível excluir um horário que possui agendamentos.");
+    }
+
     _context.HorariosTemplate.Remove(horario);
     await _context.SaveChangesAsync();
 
