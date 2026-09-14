@@ -96,7 +96,8 @@ public async Task<IActionResult> Deletar(int id)
         return Forbid();
     }
 
-    var horario = await _context.HorariosTemplate.FindAsync(id);
+    var horario = await _context.HorariosTemplate
+        .FirstOrDefaultAsync(h => h.Id == id && h.ProfessorId == usuarioLogado.Id);
 
     if (horario == null)
     {
