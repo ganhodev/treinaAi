@@ -1,8 +1,12 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TreinaAi.Api.DTOs;
 
 public class CriarAgendamentoDto
 {
+    [Range(1, int.MaxValue)]
     public int HorarioTemplateId { get; set; }
+
     public DateOnly Data { get; set; }
 }
 
