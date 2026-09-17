@@ -480,4 +480,4 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-TreinaAi.Api/appsettings.json
+TreinaAi.Api/appsettings.json 
