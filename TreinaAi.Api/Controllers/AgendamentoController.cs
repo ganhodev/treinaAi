@@ -37,6 +37,11 @@ public class AgendamentoController : ControllerBase
             return NotFound("Horário não encontrado.");
         }
 
+        if (horario.ProfessorId == usuarioId)
+        {
+            return BadRequest("Professores não podem se inscrever no próprio horário.");
+        }
+
         var diasSemanaMap = new Dictionary<DiaSemana, DayOfWeek>
         {
             { DiaSemana.segunda, DayOfWeek.Monday },
