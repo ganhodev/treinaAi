@@ -22,18 +22,21 @@ public class HorarioTemplateController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Listar()
+    public async Task<IActionResult> Listar([FromQuery] DateOnly? data = null)
     {
         var horarios = await _context.HorariosTemplate
             .Include(h => h.Professor)
             .ToListAsync();
 
         var resultado = new List<HorarioDisponivelDto>();
+        var dataReferencia = data ?? DateOnly.FromDateTime(DateTime.Today);
 
         foreach (var horario in horarios)
         {
+            var dataHorario = data ?? ObterProximaDataParaHorario(dataReferencia, horario.DiaSemana);
             var vagasOcupadas = await _context.Agendamentos
                 .CountAsync(a => a.HorarioTemplateId == horario.Id
+                    && a.Data == dataHorario
                     && a.Status == StatusAgendamento.Confirmado);
 
             resultado.Add(new HorarioDisponivelDto
@@ -49,6 +52,28 @@ public class HorarioTemplateController : ControllerBase
         }
 
         return Ok(resultado);
+    }
+
+    private static DateOnly ObterProximaDataParaHorario(DateOnly dataReferencia, DiaSemana diaSemana)
+    {
+        var diaSemanaMap = new Dictionary<DiaSemana, DayOfWeek>
+        {
+            { DiaSemana.segunda, DayOfWeek.Monday },
+            { DiaSemana.terca, DayOfWeek.Tuesday },
+            { DiaSemana.quarta, DayOfWeek.Wednesday },
+            { DiaSemana.quinta, DayOfWeek.Thursday },
+            { DiaSemana.sexta, DayOfWeek.Friday }
+        };
+
+        var diaAlvo = diaSemanaMap[diaSemana];
+        var data = dataReferencia;
+
+        while (data.DayOfWeek != diaAlvo)
+        {
+            data = data.AddDays(1);
+        }
+
+        return data;
     }
 
     [Authorize]

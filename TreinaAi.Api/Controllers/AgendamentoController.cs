@@ -30,70 +30,85 @@ public class AgendamentoController : ControllerBase
             return Unauthorized();
         }
 
-        var horario = await _context.HorariosTemplate.FindAsync(dto.HorarioTemplateId);
+        using var transaction = await _context.Database.BeginTransactionAsync();
 
-        if (horario == null)
+        try
         {
-            return NotFound("Horário não encontrado.");
+            await _context.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT 1 FROM \"HorariosTemplate\" WHERE \"Id\" = {dto.HorarioTemplateId} FOR UPDATE");
+
+            var horario = await _context.HorariosTemplate
+                .SingleOrDefaultAsync(h => h.Id == dto.HorarioTemplateId);
+
+            if (horario == null)
+            {
+                return NotFound("Horário não encontrado.");
+            }
+
+            if (horario.ProfessorId == usuarioId)
+            {
+                return BadRequest("Professores não podem se inscrever no próprio horário.");
+            }
+
+            var diasSemanaMap = new Dictionary<DiaSemana, DayOfWeek>
+            {
+                { DiaSemana.segunda, DayOfWeek.Monday },
+                { DiaSemana.terca, DayOfWeek.Tuesday },
+                { DiaSemana.quarta, DayOfWeek.Wednesday },
+                { DiaSemana.quinta, DayOfWeek.Thursday },
+                { DiaSemana.sexta, DayOfWeek.Friday }
+            };
+
+            if (dto.Data < DateOnly.FromDateTime(DateTime.Today))
+            {
+                return BadRequest("Não é possível agendar em uma data passada.");
+            }
+
+            if (dto.Data.DayOfWeek != diasSemanaMap[horario.DiaSemana])
+            {
+                return BadRequest($"A data informada não corresponde a uma {horario.DiaSemana}-feira.");
+            }
+
+            var jaInscrito = await _context.Agendamentos
+                .AnyAsync(a => a.HorarioTemplateId == dto.HorarioTemplateId
+                    && a.Data == dto.Data
+                    && a.UsuarioId == usuarioId
+                    && a.Status == StatusAgendamento.Confirmado);
+
+            if (jaInscrito)
+            {
+                return BadRequest("Você já está inscrito neste horário nesta data.");
+            }
+
+            var vagasOcupadas = await _context.Agendamentos
+                .CountAsync(a => a.HorarioTemplateId == dto.HorarioTemplateId
+                    && a.Data == dto.Data
+                    && a.Status == StatusAgendamento.Confirmado);
+
+            if (vagasOcupadas >= horario.CapacidadeMaxima)
+            {
+                return BadRequest("Não há vagas disponíveis para este horário.");
+            }
+
+            var agendamento = new Agendamento
+            {
+                HorarioTemplateId = dto.HorarioTemplateId,
+                Data = dto.Data,
+                UsuarioId = usuarioId,
+                Status = StatusAgendamento.Confirmado
+            };
+
+            _context.Agendamentos.Add(agendamento);
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return Ok(agendamento);
         }
-
-        if (horario.ProfessorId == usuarioId)
+        catch
         {
-            return BadRequest("Professores não podem se inscrever no próprio horário.");
+            await transaction.RollbackAsync();
+            throw;
         }
-
-        var diasSemanaMap = new Dictionary<DiaSemana, DayOfWeek>
-        {
-            { DiaSemana.segunda, DayOfWeek.Monday },
-            { DiaSemana.terca, DayOfWeek.Tuesday },
-            { DiaSemana.quarta, DayOfWeek.Wednesday },
-            { DiaSemana.quinta, DayOfWeek.Thursday },
-            { DiaSemana.sexta, DayOfWeek.Friday }
-        };
-
-        if (dto.Data < DateOnly.FromDateTime(DateTime.Today))
-        {
-            return BadRequest("Não é possível agendar em uma data passada.");
-        }
-
-        if (dto.Data.DayOfWeek != diasSemanaMap[horario.DiaSemana])
-        {
-            return BadRequest($"A data informada não corresponde a uma {horario.DiaSemana}-feira.");
-        }
-
-        var jaInscrito = await _context.Agendamentos
-            .AnyAsync(a => a.HorarioTemplateId == dto.HorarioTemplateId
-                && a.Data == dto.Data
-                && a.UsuarioId == usuarioId
-                && a.Status == StatusAgendamento.Confirmado);
-
-        if (jaInscrito)
-        {
-            return BadRequest("Você já está inscrito neste horário nesta data.");
-        }
-
-        var vagasOcupadas = await _context.Agendamentos
-            .CountAsync(a => a.HorarioTemplateId == dto.HorarioTemplateId
-                && a.Data == dto.Data
-                && a.Status == StatusAgendamento.Confirmado);
-
-        if (vagasOcupadas >= horario.CapacidadeMaxima)
-        {
-            return BadRequest("Não há vagas disponíveis para este horário.");
-        }
-
-        var agendamento = new Agendamento
-        {
-            HorarioTemplateId = dto.HorarioTemplateId,
-            Data = dto.Data,
-            UsuarioId = usuarioId,
-            Status = StatusAgendamento.Confirmado
-        };
-
-        _context.Agendamentos.Add(agendamento);
-        await _context.SaveChangesAsync();
-
-        return Ok(agendamento);
     }
 
     [HttpPut("{id}/cancelar")]
