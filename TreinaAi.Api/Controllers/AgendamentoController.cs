@@ -132,6 +132,11 @@ public class AgendamentoController : ControllerBase
             return NotFound("Agendamento não encontrado.");
         }
 
+        if (agendamento.Status == StatusAgendamento.Cancelado)
+        {
+            return BadRequest("Este agendamento já foi cancelado.");
+        }
+
         agendamento.Status = StatusAgendamento.Cancelado;
         await _context.SaveChangesAsync();
 
