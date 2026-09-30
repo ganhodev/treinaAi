@@ -16,7 +16,7 @@ function formatarData(dataIso) {
 }
 
 async function fazerLogin() {
-    const email = document.getElementById("login-email").value;
+    const email = document.getElementById("login-email").value.trim();
     const senha = document.getElementById("login-senha").value;
 
     try {
@@ -45,15 +45,15 @@ async function fazerLogin() {
 }
 
 async function fazerCadastro() {
-    const nome = document.getElementById("cadastro-nome").value;
-    const email = document.getElementById("cadastro-email").value;
+    const nome = document.getElementById("cadastro-nome").value.trim();
+    const email = document.getElementById("cadastro-email").value.trim();
     const senha = document.getElementById("cadastro-senha").value;
 
     try {
         const resposta = await fetch(`${API_URL}/Auth/registrar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nome, email, senha, ehProfessor: false })
+            body: JSON.stringify({ nome, email, senha })
         });
 
         if (!resposta.ok) {
@@ -152,6 +152,9 @@ async function carregarHorarios() {
 
     try {
         const resposta = await fetch(`${API_URL}/HorarioTemplate`);
+        if (!resposta.ok) {
+            throw new Error(`Falha ao carregar horários (${resposta.status})`);
+        }
         const horarios = await resposta.json();
 
         const container = document.getElementById("lista-horarios");
@@ -162,18 +165,15 @@ async function carregarHorarios() {
 
             const card = document.createElement("div");
             card.className = "horario-card";
-            card.innerHTML = `
-                <div class="horario-info">
-                    <strong>${h.diaSemana}</strong>
-                    ${h.horaInicio} - ${h.horaFim} · ${h.professorNome}
-                    <br>Vagas: ${h.vagasDisponiveis}/${h.capacidadeMaxima}
-                </div>
-                <button class="btn-inscrever ${semVaga ? 'sem-vaga' : ''}"
-                        ${semVaga ? 'disabled' : ''}
-                        onclick="inscrever(${h.id}, '${h.diaSemana}')">
-                    ${semVaga ? 'Sem vaga' : 'Inscrever-se'}
-                </button>
-            `;
+            const info = document.createElement("div");
+            info.className = "horario-info";
+            info.textContent = `${h.diaSemana} · ${h.horaInicio} - ${h.horaFim} · ${h.professorNome} | Vagas: ${h.vagasDisponiveis}/${h.capacidadeMaxima}`;
+            const botao = document.createElement("button");
+            botao.className = `btn-inscrever ${semVaga ? "sem-vaga" : ""}`;
+            botao.disabled = semVaga;
+            botao.textContent = semVaga ? "Sem vaga" : "Inscrever-se";
+            botao.addEventListener("click", () => inscrever(h.id, h.diaSemana));
+            card.append(info, botao);
             container.appendChild(card);
         });
     } catch (erro) {
@@ -289,14 +289,13 @@ async function carregarMeusAgendamentos() {
         agendamentos.forEach(a => {
             const card = document.createElement("div");
             card.className = "agendamento-card";
-            card.innerHTML = `
-                <div>
-                    <strong>${a.diaSemana}</strong> · ${formatarData(a.data)} · ${a.horaInicio} - ${a.horaFim}
-                </div>
-                <button class="btn-cancelar-agendamento" onclick="cancelarAgendamento(${a.id})">
-                    Cancelar
-                </button>
-            `;
+            const info = document.createElement("div");
+            info.textContent = `${a.diaSemana} · ${formatarData(a.data)} · ${a.horaInicio} - ${a.horaFim}`;
+            const botao = document.createElement("button");
+            botao.className = "btn-cancelar-agendamento";
+            botao.textContent = "Cancelar";
+            botao.addEventListener("click", () => cancelarAgendamento(a.id));
+            card.append(info, botao);
             container.appendChild(card);
         });
     } catch (erro) {
@@ -359,11 +358,14 @@ async function carregarAgendamentosProfessor() {
             const statusClass = a.status === "Confirmado" ? "status-confirmado" : "status-cancelado";
             const card = document.createElement("div");
             card.className = "agendamento-card";
-            card.innerHTML = `
-                <strong>${a.alunoNome}</strong><br>
-                Data: ${formatarData(a.data)} · ${a.horaInicio} - ${a.horaFim}<br>
-                Status: <span class="${statusClass}">${a.status}</span>
-            `;
+            const aluno = document.createElement("strong");
+            aluno.textContent = a.alunoNome;
+            const detalhes = document.createElement("div");
+            detalhes.textContent = `Data: ${formatarData(a.data)} · ${a.horaInicio} - ${a.horaFim}`;
+            const status = document.createElement("div");
+            status.textContent = `Status: ${a.status}`;
+            status.className = statusClass;
+            card.append(aluno, detalhes, status);
             container.appendChild(card);
         });
     } catch (erro) {

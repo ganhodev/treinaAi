@@ -26,18 +26,29 @@ public class HorarioTemplateController : ControllerBase
     {
         var horarios = await _context.HorariosTemplate
             .Include(h => h.Professor)
+            .OrderBy(h => h.DiaSemana)
+            .ThenBy(h => h.HoraInicio)
             .ToListAsync();
 
+        var datasPorHorario = horarios.ToDictionary(
+            h => h.Id,
+            h => data ?? ObterProximaDataParaHorario(DateOnly.FromDateTime(DateTime.Today), h.DiaSemana));
+        var ids = datasPorHorario.Keys.ToArray();
+        var datas = datasPorHorario.Values.Distinct().ToArray();
+        var vagasOcupadas = await _context.Agendamentos
+            .Where(a => ids.Contains(a.HorarioTemplateId)
+                && datas.Contains(a.Data)
+                && a.Status == StatusAgendamento.Confirmado)
+            .GroupBy(a => new { a.HorarioTemplateId, a.Data })
+            .Select(g => new { g.Key.HorarioTemplateId, g.Key.Data, Total = g.Count() })
+            .ToDictionaryAsync(x => (x.HorarioTemplateId, x.Data), x => x.Total);
+
         var resultado = new List<HorarioDisponivelDto>();
-        var dataReferencia = data ?? DateOnly.FromDateTime(DateTime.Today);
 
         foreach (var horario in horarios)
         {
-            var dataHorario = data ?? ObterProximaDataParaHorario(dataReferencia, horario.DiaSemana);
-            var vagasOcupadas = await _context.Agendamentos
-                .CountAsync(a => a.HorarioTemplateId == horario.Id
-                    && a.Data == dataHorario
-                    && a.Status == StatusAgendamento.Confirmado);
+            var dataHorario = datasPorHorario[horario.Id];
+            vagasOcupadas.TryGetValue((horario.Id, dataHorario), out var ocupadas);
 
             resultado.Add(new HorarioDisponivelDto
             {
@@ -47,7 +58,7 @@ public class HorarioTemplateController : ControllerBase
                 HoraFim = horario.HoraFim.ToString("HH:mm"),
                 ProfessorNome = horario.Professor?.Nome ?? "",
                 CapacidadeMaxima = horario.CapacidadeMaxima,
-                VagasDisponiveis = horario.CapacidadeMaxima - vagasOcupadas
+                VagasDisponiveis = Math.Max(0, horario.CapacidadeMaxima - ocupadas)
             });
         }
 
@@ -78,18 +89,13 @@ public class HorarioTemplateController : ControllerBase
 
     [Authorize]
     [HttpPost]
-    public async Task<IActionResult> Criar(CriarHorarioDto dto)
+    public async Task<IActionResult> Criar([FromBody] CriarHorarioDto dto)
     {
         var usuarioLogado = await _userManager.GetUserAsync(User);
 
         if (usuarioLogado == null || !usuarioLogado.EhProfessor)
         {
             return Forbid();
-        }
-
-        if (dto.CapacidadeMaxima <= 0)
-        {
-            return BadRequest("A capacidade máxima deve ser maior que zero.");
         }
 
         if (!Enum.IsDefined(dto.DiaSemana))
@@ -100,6 +106,16 @@ public class HorarioTemplateController : ControllerBase
         if (dto.HoraFim <= dto.HoraInicio)
         {
             return BadRequest("O horário final deve ser posterior ao horário inicial.");
+        }
+
+        var duplicado = await _context.HorariosTemplate.AnyAsync(h =>
+            h.ProfessorId == usuarioLogado.Id &&
+            h.DiaSemana == dto.DiaSemana &&
+            h.HoraInicio == dto.HoraInicio &&
+            h.HoraFim == dto.HoraFim);
+        if (duplicado)
+        {
+            return Conflict("Você já possui um horário com essa configuração.");
         }
 
         var horario = new HorarioTemplate

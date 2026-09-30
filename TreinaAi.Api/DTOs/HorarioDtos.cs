@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using TreinaAi.Api.Models;
 
 namespace TreinaAi.Api.DTOs;
@@ -21,13 +22,13 @@ public class HorarioDisponivelDto
 
 public class CriarHorarioDto
 {
+    [EnumDataType(typeof(DiaSemana))]
     public DiaSemana DiaSemana { get; set; }
 
     public TimeOnly HoraInicio { get; set; }
 
     public TimeOnly HoraFim { get; set; }
 
+    [Range(1, 500)]
     public int CapacidadeMaxima { get; set; }
-    
-    public string ProfessorId { get; set; } = string.Empty;
 }

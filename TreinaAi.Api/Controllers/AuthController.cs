@@ -23,13 +23,13 @@ public class AuthController : ControllerBase
     }
 
    [HttpPost("registrar")]
-public async Task<IActionResult> Registrar(CadastroDto dto)
+public async Task<IActionResult> Registrar([FromBody] CadastroDto dto)
 {
   var usuario = new Usuario
 {
-    UserName = dto.Email,
-    Email = dto.Email,
-    Nome = dto.Nome,
+    UserName = dto.Email.Trim(),
+    Email = dto.Email.Trim(),
+    Nome = dto.Nome.Trim(),
     EhProfessor = false
 };
 
@@ -44,9 +44,9 @@ public async Task<IActionResult> Registrar(CadastroDto dto)
 }
 
     [HttpPost("login")]
-public async Task<IActionResult> Login(LoginDto dto)
+public async Task<IActionResult> Login([FromBody] LoginDto dto)
 {
-    var usuario = await _userManager.FindByEmailAsync(dto.Email);
+    var usuario = await _userManager.FindByEmailAsync(dto.Email.Trim());
 
     if (usuario == null)
     {
@@ -76,7 +76,8 @@ private string GerarToken(Usuario usuario)
     {
         new Claim(ClaimTypes.NameIdentifier, usuario.Id),
         new Claim(ClaimTypes.Email, usuario.Email!),
-        new Claim(ClaimTypes.Name, usuario.Nome)
+        new Claim(ClaimTypes.Name, usuario.Nome),
+        new Claim(ClaimTypes.Role, usuario.EhProfessor ? "Professor" : "Aluno")
     };
 
     var chave = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));

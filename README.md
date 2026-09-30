@@ -84,6 +84,7 @@ Este é um projeto pessoal de estudo e portfólio, sem fins comerciais — o obj
    ```bash
    dotnet ef database update
    ```
+   Isso também aplica as restrições que impedem horários duplicados e inscrições confirmadas duplicadas.
 4. Suba a API:
    ```bash
    dotnet run
